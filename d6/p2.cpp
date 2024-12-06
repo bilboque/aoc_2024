@@ -50,6 +50,7 @@ int main() {
     
     array<int, 2> dir{0, -1};
     array<int, 2> pos;
+    array<int, 2> initial_pos;
     bool found = false;
     for (int y = 0; y < map.size() && !found; y++)
         for (int x = 0; x < map[y].size(); x++)
@@ -58,14 +59,15 @@ int main() {
                 found = true;
                 break;
             }
-
+    
+    //
+    initial_pos[0] = pos[0];
+    initial_pos[1] = pos[1];
+    
     if (!found) {
         cout << "WHAT" << endl;
         return 0;
     }
-
-    for (auto line: map)
-         cout << line << endl;
 
     bool done = false;
     set<array<int, 2>> reached;
@@ -78,12 +80,46 @@ int main() {
             break;
         if (map[pos[1] + dir[1]][pos[0] + dir[0]] == '#') {
             turn_90(dir);
-            //cout << "turn" << endl;
-            //cout << dir[0] << " " << dir[1] << endl;
             continue;
         }
         update_pos(pos, dir);
-        //cout << pos[0] << " " << pos[1] << endl;
         reached.insert(pos);
     }
+    float total = reached.size();
+    int i = 0;
+    int loop_counter = 0;
+    for (auto to_try: reached){
+        if (to_try[0] == initial_pos[0] && to_try[1] == initial_pos[1]){
+            continue;
+        }
+        // reset pos
+        pos[0] = initial_pos[0];
+        pos[1] = initial_pos[1];
+        
+        //reset dir
+        dir[0] = 0;
+        dir[1] = -1;
+        cout << "CHECK" << " " << i++/total << endl;
+        set<array<int, 4>> states;
+        states.insert({pos[0], pos[1], dir[0], dir[1]});
+        while (true) {
+            if (pos[1] + dir[1] < 0 ||
+                pos[1] + dir[1] >= map.size() ||
+                pos[0] + dir[0] < 0 ||
+                pos[0] + dir[0] >= map[pos[0]].size())
+                break;
+            if (map[pos[1] + dir[1]][pos[0] + dir[0]] == '#'||
+                (pos[1] + dir[1] == to_try[1] && pos[0] + dir[0] == to_try[0])) {
+                turn_90(dir);
+                continue;
+            }
+            update_pos(pos, dir);
+            if (states.count({pos[0], pos[1], dir[0], dir[1]})) {
+                loop_counter++;
+                break;
+            }
+            states.insert({pos[0], pos[1], dir[0], dir[1]});
+        }
+    }
+    cout << loop_counter << endl;
 }
